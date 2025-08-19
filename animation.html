@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title> A-Frame Project</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+</head>
+
+<body>
+  <a-scene>
+    <a-box position="0 0 -3" color="red" rotation="0 60 0">
+      <a-animation attribute="scale" 
+        to="2 2 2" 
+        dur="3000" 
+        repeat="indefinite" 
+        dir="alternate">
+    </a-box>'
+
+    <a-cylinder position="0 -2 -5" color="blue" animation="property:position; 
+      to: 0 5 -5; 
+      dur: 10000;
+      loop:true; 
+      dir:alternate;">
+
+    </a-cylinder>
+
+  </a-scene>
+
+</body>
+
+</html>

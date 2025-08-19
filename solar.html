@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>A-Frame Solar System</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+</head>
+
+<body>
+  <a-scene background="color: black">
+
+    <!-- Light Source -->
+    <a-entity light="type: point; color: #ffffff; intensity: 2; distance: 100" position="0 0 0"></a-entity>
+
+    <!-- Camera -->
+    <a-entity camera look-controls position="0 2 20"></a-entity>
+
+    <!-- Sun -->
+    <a-sphere position="0 0 0" radius="2" emissive="yellow"></a-sphere>
+
+    <!-- Mercury Orbit -->
+    <a-entity id="mercuryOrbit" rotation="0 0 0"
+      animation="property: rotation; to: 0 360 0; dur: 5000; loop: true; easing: linear">
+      <a-sphere position="4 0 0" radius="0.3" color="#b1b1b1"></a-sphere>
+    </a-entity>
+
+    <!-- Venus Orbit -->
+    <a-entity id="venusOrbit" rotation="0 0 0"
+      animation="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear">
+      <a-sphere position="6 0 0" radius="0.4" color="#d9a066"></a-sphere>
+    </a-entity>
+
+    <!-- Earth Orbit -->
+    <a-entity id="earthOrbit" rotation="0 0 0"
+      animation="property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear">
+      <a-sphere position="8 0 0" radius="0.5" color="blue"></a-sphere>
+    </a-entity>
+
+    <!-- Mars Orbit -->
+    <a-entity id="marsOrbit" rotation="0 0 0"
+      animation="property: rotation; to: 0 360 0; dur: 12000; loop: true; easing: linear">
+      <a-sphere position="10 0 0" radius="0.4" color="red"></a-sphere>
+    </a-entity>
+
+    <!-- Jupiter Orbit -->
+    <a-entity id="jupiterOrbit" rotation="0 0 0"
+      animation="property: rotation; to: 0 360 0; dur: 15000; loop: true; easing: linear">
+      <a-sphere position="13 0 0" radius="1" color="#c2b280"></a-sphere>
+    </a-entity>
+
+    <!-- Saturn Orbit -->
+    <a-entity id="saturnOrbit" rotation="0 0 0"
+      animation="property: rotation; to: 0 360 0; dur: 18000; loop: true; easing: linear">
+      <a-sphere position="16 0 0" radius="0.9" color="#e0c177"></a-sphere>
+      <a-ring position="16 0 0" rotation="90 0 0" radius-inner="1.1" radius-outer="1.5" color="#ccc"></a-ring>
+    </a-entity>
+    
+  </a-scene>
+</body>
+
+</html>

@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <title>AR/VR Bootcamp at GNA University</title>
+  <title>About Nikshep Paliwal - AR/VR Training for Punjab Police</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Bootstrap 5 CSS -->
@@ -63,26 +63,45 @@
       height: 50px;
     }
 
-    .card {
-      transition: transform 0.3s, box-shadow 0.3s;
-      border: none;
+    .bio-section {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: white;
       border-radius: 10px;
-      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .card-img-top {
-      height: 150px;
-      object-fit: cover;
-    }
-
-    .card-title {
-      font-size: 1.25rem;
+    .section-title {
+      font-size: 1.5rem;
       font-weight: 700;
+      color: #222;
+      border-bottom: 2px solid #003087;
+      display: inline-block;
+      padding-bottom: 5px;
+      margin-bottom: 1rem;
+    }
+
+    .highlight {
+      font-weight: bold;
+      color: #003087;
+    }
+
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    ul li {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    ul li::before {
+      content: "✔";
+      color: #003087;
+      margin-right: 0.5rem;
     }
 
     footer {
@@ -109,15 +128,11 @@
     <div class="container">
       <img src="nikshep_paliwal.JPG" alt="Nikshep Paliwal Profile" class="profile-img">
       <div class="hero-text">
-        <h1 class="display-4 fw-bold">AR/VR Bootcamp at IDC Chandigarh</h1>
-        <h4 class="mb-4">By Nikshep Paliwal, Project Engineer, NIELIT Ropar</h4>
+        <h1 class="display-4 fw-bold">About Nikshep Paliwal</h1>
+        <h4 class="mb-4">Project Engineer, NIELIT Ropar</h4>
         <p class="lead">
-          The AR/VR Training under the Future Skills Prime Programme (FSP) equips students with
-          cutting-edge
-          skills in immersive technologies to enhance operational efficiency and situational awareness. Our mission is
-          to
-          drive digital transformation in law enforcement through practical, hands-on training, fostering innovation and
-          adaptability.
+          Leading innovative AR/VR and mobile/web development initiatives for Punjab Police under the Focused Skill
+          Programme (FSP).
         </p>
       </div>
     </div>
@@ -126,8 +141,8 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-white">
     <div class="container">
-      <a class="navbar-brand" href="#">
-        <img src="nielit_logo_scaled.jpg" alt="NIELIT LOGO">
+      <a class="navbar-brand" href="arvr_training.html">
+        <img src="nielit_logo_scaled.jpg" alt="NIELIT Logo">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -135,53 +150,53 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
-
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="about.html">About</a></li>
         </ul>
       </div>
     </div>
   </nav>
 
-
-  <!-- Projects Section 1 -->
+  <!-- Biography Section -->
   <div class="container py-5">
-    <h2 class="text-center mb-5 fw-bold">Training Modules</h2>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card h-100">
-          <img src="firstProject.png" class="card-img-top" alt="A-Frame Object Manipulation">
-          <div class="card-body">
-            <h5 class="card-title">A-Frame Object Manipulation</h5>
-            <p class="card-text">Interactive VR training for manipulating object position, rotation, and scale in
-              A-Frame for scenario-based learning. <a href="hiroMarker.html">Click here...</a></p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card h-100">
-          <img src="imgTexture.png" class="card-img-top" alt="Tactical Training">
-          <div class="card-body">
-            <h5 class="card-title">Image Texturing</h5>
-            <p class="card-text">Adding images on the objects like box, sphere, cylinder etc.<a
-                href="customMarker.html">
-                Click Here...</a></p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card h-100">
-          <img src="360front.png" class="card-img-top" alt="Crowd Control Simulation">
-          <div class="card-body">
-            <h5 class="card-title">360&deg; View</h5>
-            <p class="card-text">360&deg; Lab View. <a href="360view.html">Click Here...</a></p>
-          </div>
-        </div>
-      </div>
+    <div class="bio-section">
+      <h2 class="section-title">About Me</h2>
+      <p>
+        Hello! I'm <span class="highlight">Nikshep Paliwal</span>, currently working as a <span
+          class="highlight">Project Engineer</span> (Mobile & Web Application Developer) at <span
+          class="highlight">NIELIT Ropar, Punjab</span>. I specialize in Android development, web technologies, and
+        full-stack solutions, with a strong focus on leveraging immersive technologies like AR/VR to transform law
+        enforcement training.
+      </p>
+      <p>
+        I am actively involved in student training and mentoring programs, helping learners develop practical skills in
+        modern technologies, including app development, cloud platforms, and software tools. My work includes
+        contributing to government training initiatives, such as the AR/VR Training under the Future Skills Prime
+        programme
+        (FSP) for Punjab Police, and developing institutional applications that drive digital innovation.
+      </p>
+      <p>
+        I hold a Master's degree in Computer Applications (MCA) and have qualified the <span class="highlight">UGC
+          NET</span> examination in Computer Science, reflecting my strong academic foundation and passion for research
+        in computing and education.
+      </p>
+
+      <h2 class="section-title">Key Highlights</h2>
+      <ul>
+        <li>UGC NET Qualified in Computer Science (June 25)</li>
+        <li>Project Engineer at NIELIT Ropar</li>
+        <li>Trainer for Mobile & Web Development and AR/VR Programs</li>
+        <li>Experienced in Android, Web, Cloud Platforms, A-Frame, Unity, Vuforia, Flask and more.</li>
+      </ul>
+
+      <h2 class="section-title">Contact</h2>
+      <p>
+        <strong>Email:</strong> niksheppaliwal@gmail.com<br />
+        <strong>Location:</strong>Saharanpur Uttar Pradesh India<br />
+        <strong>Phone:</strong> +91-9149188705
+      </p>
     </div>
   </div>
-
-
 
   <!-- Footer -->
   <footer class="text-center">
