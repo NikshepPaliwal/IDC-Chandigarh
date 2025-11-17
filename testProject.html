@@ -1,109 +1,139 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Simple VR Battleground</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  </head>
+<head>
+  <title>Elite Soldier VR – Premium Game</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+</head>
 
-  <body>
-    <a-scene>
+<body>
+<a-scene>
 
-      <!-- SKY -->
-      <a-sky color="#87CEEB"></a-sky>
+  <!-- SKY -->
+  <a-sky color="#0e0e0f"></a-sky>
 
-      <!-- GROUND -->
-      <a-plane 
-        position="0 0 -5" 
-        rotation="-90 0 0" 
-        width="40" 
-        height="40" 
-        color="#7CFC00">
-      </a-plane>
+  <!-- ENVIRONMENT GROUND -->
+  <a-plane rotation="-90 0 0" width="200" height="200" color="#343a40"></a-plane>
 
-      <!-- TITLE -->
-      <a-text 
-        value="VR Army Battleground" 
-        position="-1.5 3 -4" 
-        color="black" 
-        width="6">
-      </a-text>
+  <!-- GLOBAL LIGHTS -->
+  <a-entity light="type: ambient; intensity: 0.6"></a-entity>
+  <a-entity light="type: point; castShadow: true; intensity: 1.4" position="0 5 0"></a-entity>
 
-      <!-- BUNKERS -->
-      <a-box position="-3 1 -10" depth="3" height="2" width="4" color="#8B4513"></a-box>
-      <a-box position="3 1 -10" depth="3" height="2" width="4" color="#8B4513"></a-box>
+  <!-- PLAYER CAMERA -->
+  <a-entity id="player" camera look-controls wasd-controls="acceleration:30" position="0 1.6 5"></a-entity>
 
-      <!-- ENEMY TARGETS -->
-      <a-cylinder 
-        class="enemy"
-        position="-2 1 -6" 
-        radius="0.5" 
-        height="2" 
-        color="red">
-      </a-cylinder>
+  <!-- GUN -->
+  <a-box id="gun"
+         position="0.25 -0.3 -1"
+         height="0.1" width="0.2" depth="1"
+         color="black">
+  </a-box>
 
-      <a-cylinder 
-        class="enemy"
-        position="2 1 -8" 
-        radius="0.5" 
-        height="2" 
-        color="red">
-      </a-cylinder>
+  <!-- LASER SHOT -->
+  <a-entity id="laser"
+            line="start:0 0 0; end:0 0 -3; color: yellow"
+            visible="false">
+  </a-entity>
 
-      <a-cylinder 
-        class="enemy"
-        position="0 1 -12" 
-        radius="0.5" 
-        height="2" 
-        color="red">
-      </a-cylinder>
+  <!-- HUD – HEALTH -->
+  <a-text id="healthDisplay"
+          value="HEALTH: 100"
+          position="-0.8 0.7 -1.5"
+          scale="0.5 0.5 0.5"
+          color="red">
+  </a-text>
 
-      <!-- GUN (Static in front of camera) -->
-      <a-box 
-        position="0 -0.3 -1" 
-        height="0.1" 
-        width="0.1" 
-        depth="0.8" 
-        color="black" 
-        static-body>
-      </a-box>
+  <!-- HUD – SCORE -->
+  <a-text id="scoreDisplay"
+          value="SCORE: 0"
+          position="0.4 0.7 -1.5"
+          scale="0.5 0.5 0.5"
+          color="yellow">
+  </a-text>
 
-      <!-- SHOOTING LASER -->
-      <a-entity id="laser" 
-                line="start:0 0 0; end:0 0 -2; color: yellow"
-                visible="false">
-      </a-entity>
+  <!-- ENEMY PREFAB -->
+  <a-entity id="enemy1" class="enemy"
+            geometry="primitive: box; width: 1; height: 2; depth: 1"
+            material="color: #ff4444"
+            position="0 1 -10">
+  </a-entity>
 
-      <!-- CAMERA (Player) -->
-      <a-entity camera look-controls wasd-controls id="player"></a-entity>
+  <a-entity id="enemy2" class="enemy"
+            geometry="primitive: box; width: 1; height: 2; depth: 1"
+            material="color: #ff4444"
+            position="5 1 -15">
+  </a-entity>
 
-      <!-- SHOOTING SCRIPT -->
-      <script>
-        document.addEventListener("click", () => {
-          const player = document.querySelector("#player");
-          const laser = document.querySelector("#laser");
+  <a-entity id="enemy3" class="enemy"
+            geometry="primitive: box; width: 1; height: 2; depth: 1"
+            material="color: #ff4444"
+            position="-5 1 -12">
+  </a-entity>
 
-          // Show laser beam
-          laser.setAttribute("visible", "true");
-          laser.setAttribute("position", player.getAttribute("position"));
-          
-          // Hide laser after 150ms
-          setTimeout(() => {
-            laser.setAttribute("visible", "false");
-          }, 150);
+  <!-- SOUND -->
+  <audio id="gunShot" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_5c74619e47.mp3" preload="auto"></audio>
+  <audio id="hitSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_040b71e3e0.mp3" preload="auto"></audio>
 
-          // Hit detection
-          document.querySelectorAll(".enemy").forEach(enemy => {
-            const enemyPos = enemy.object3D.position;
-            const playerPos = player.object3D.position;
+  <!-- GAME SCRIPT -->
+  <script>
+    let score = 0;
+    let health = 100;
 
-            const dist = playerPos.distanceTo(enemyPos);
-            if (dist < 5) {
-              enemy.setAttribute("color", "gray"); // enemy down
-            }
-          });
-        });
-      </script>
+    function updateHUD() {
+      document.getElementById("scoreDisplay").setAttribute("value", "SCORE: " + score);
+      document.getElementById("healthDisplay").setAttribute("value", "HEALTH: " + health);
+    }
 
-    </a-scene>
-  </body>
+    // Enemy Movement AI
+    setInterval(() => {
+      document.querySelectorAll(".enemy").forEach(enemy => {
+        let x = enemy.object3D.position.x + (Math.random() * 2 - 1);
+        let z = enemy.object3D.position.z + (Math.random() * 2 - 1);
+        enemy.setAttribute("animation", `property: position; to: ${x} 1 ${z}; dur: 1000; easing: linear`);
+      });
+    }, 1200);
+
+    // Shooting
+    document.addEventListener("click", () => {
+      const shotSound = document.getElementById("gunShot");
+      shotSound.play();
+
+      const laser = document.getElementById("laser");
+      const player = document.getElementById("player");
+
+      laser.setAttribute("visible", "true");
+      laser.setAttribute("position", player.getAttribute("position"));
+
+      setTimeout(() => { laser.setAttribute("visible", "false"); }, 150);
+
+      document.querySelectorAll(".enemy").forEach(enemy => {
+        const enemyPos = enemy.object3D.position;
+        const playerPos = player.object3D.position;
+
+        const dist = playerPos.distanceTo(enemyPos);
+        if (dist < 8) {
+          document.getElementById("hitSound").play();
+          score++;
+          enemy.setAttribute("material", "color: gray");
+          enemy.setAttribute("position", `${Math.random()*10-5} 1 ${Math.random()*-20}`);
+          updateHUD();
+        }
+      });
+    });
+
+    // Enemy Attack
+    setInterval(() => {
+      let playerPos = document.getElementById("player").object3D.position;
+      document.querySelectorAll(".enemy").forEach(enemy => {
+        let dist = playerPos.distanceTo(enemy.object3D.position);
+        if (dist < 3) {
+          health -= 5;
+          updateHUD();
+        }
+      });
+    }, 1000);
+
+  </script>
+
+</a-scene>
+</body>
 </html>
