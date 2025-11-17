@@ -1,139 +1,306 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Elite Soldier VR – Premium Game</title>
+  <meta charset="utf-8" />
+  <title>Ultra Premium VR Battleground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-</head>
-
-<body>
-<a-scene>
-
-  <!-- SKY -->
-  <a-sky color="#0e0e0f"></a-sky>
-
-  <!-- ENVIRONMENT GROUND -->
-  <a-plane rotation="-90 0 0" width="200" height="200" color="#343a40"></a-plane>
-
-  <!-- GLOBAL LIGHTS -->
-  <a-entity light="type: ambient; intensity: 0.6"></a-entity>
-  <a-entity light="type: point; castShadow: true; intensity: 1.4" position="0 5 0"></a-entity>
-
-  <!-- PLAYER CAMERA -->
-  <a-entity id="player" camera look-controls wasd-controls="acceleration:30" position="0 1.6 5"></a-entity>
-
-  <!-- GUN -->
-  <a-box id="gun"
-         position="0.25 -0.3 -1"
-         height="0.1" width="0.2" depth="1"
-         color="black">
-  </a-box>
-
-  <!-- LASER SHOT -->
-  <a-entity id="laser"
-            line="start:0 0 0; end:0 0 -3; color: yellow"
-            visible="false">
-  </a-entity>
-
-  <!-- HUD – HEALTH -->
-  <a-text id="healthDisplay"
-          value="HEALTH: 100"
-          position="-0.8 0.7 -1.5"
-          scale="0.5 0.5 0.5"
-          color="red">
-  </a-text>
-
-  <!-- HUD – SCORE -->
-  <a-text id="scoreDisplay"
-          value="SCORE: 0"
-          position="0.4 0.7 -1.5"
-          scale="0.5 0.5 0.5"
-          color="yellow">
-  </a-text>
-
-  <!-- ENEMY PREFAB -->
-  <a-entity id="enemy1" class="enemy"
-            geometry="primitive: box; width: 1; height: 2; depth: 1"
-            material="color: #ff4444"
-            position="0 1 -10">
-  </a-entity>
-
-  <a-entity id="enemy2" class="enemy"
-            geometry="primitive: box; width: 1; height: 2; depth: 1"
-            material="color: #ff4444"
-            position="5 1 -15">
-  </a-entity>
-
-  <a-entity id="enemy3" class="enemy"
-            geometry="primitive: box; width: 1; height: 2; depth: 1"
-            material="color: #ff4444"
-            position="-5 1 -12">
-  </a-entity>
-
-  <!-- SOUND -->
-  <audio id="gunShot" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_5c74619e47.mp3" preload="auto"></audio>
-  <audio id="hitSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_040b71e3e0.mp3" preload="auto"></audio>
-
-  <!-- GAME SCRIPT -->
+  <!-- particle system for explosions -->
+  <script src="https://unpkg.com/aframe-particle-system-component@1.0.1/dist/aframe-particle-system-component.min.js"></script>
+  <!-- extras (optional helper utilities) -->
   <script>
-    let score = 0;
-    let health = 100;
+    AFRAME.registerComponent('enemy-ai', {
+      schema: {
+        patrolRadius: {type: 'number', default: 6},
+        speed: {type: 'number', default: 0.8},
+        health: {type: 'number', default: 3}
+      },
+      init: function () {
+        this.state = 'patrol'; // patrol, chase, dead
+        this.target = null;
+        this.nextPatrolPoint = null;
+        this.player = document.querySelector('#player');
+        this.setPatrolPoint();
+      },
+      setPatrolPoint: function () {
+        const pos = this.el.object3D.position;
+        const r = this.data.patrolRadius;
+        const nx = pos.x + (Math.random() * 2 - 1) * r;
+        const nz = pos.z + (Math.random() * 2 - 1) * r;
+        this.nextPatrolPoint = new THREE.Vector3(nx, pos.y, nz);
+        this.el.setAttribute('animation', `property: position; to: ${nx} ${pos.y} ${nz}; dur: ${2000 + Math.random()*2000}; easing: linear`);
+      },
+      tick: function (time, dt) {
+        if (this.state === 'dead') return;
+        const playerPos = this.player.object3D.position;
+        const myPos = this.el.object3D.position;
+        const distToPlayer = myPos.distanceTo(playerPos);
 
-    function updateHUD() {
-      document.getElementById("scoreDisplay").setAttribute("value", "SCORE: " + score);
-      document.getElementById("healthDisplay").setAttribute("value", "HEALTH: " + health);
-    }
-
-    // Enemy Movement AI
-    setInterval(() => {
-      document.querySelectorAll(".enemy").forEach(enemy => {
-        let x = enemy.object3D.position.x + (Math.random() * 2 - 1);
-        let z = enemy.object3D.position.z + (Math.random() * 2 - 1);
-        enemy.setAttribute("animation", `property: position; to: ${x} 1 ${z}; dur: 1000; easing: linear`);
-      });
-    }, 1200);
-
-    // Shooting
-    document.addEventListener("click", () => {
-      const shotSound = document.getElementById("gunShot");
-      shotSound.play();
-
-      const laser = document.getElementById("laser");
-      const player = document.getElementById("player");
-
-      laser.setAttribute("visible", "true");
-      laser.setAttribute("position", player.getAttribute("position"));
-
-      setTimeout(() => { laser.setAttribute("visible", "false"); }, 150);
-
-      document.querySelectorAll(".enemy").forEach(enemy => {
-        const enemyPos = enemy.object3D.position;
-        const playerPos = player.object3D.position;
-
-        const dist = playerPos.distanceTo(enemyPos);
-        if (dist < 8) {
-          document.getElementById("hitSound").play();
-          score++;
-          enemy.setAttribute("material", "color: gray");
-          enemy.setAttribute("position", `${Math.random()*10-5} 1 ${Math.random()*-20}`);
-          updateHUD();
+        if (distToPlayer < 6 && this.state !== 'chase') {
+          this.state = 'chase';
+          this.el.removeAttribute('animation');
         }
-      });
+        if (this.state === 'chase') {
+          // move toward player
+          const dir = new THREE.Vector3().subVectors(playerPos, myPos).setY(0).normalize();
+          this.el.object3D.position.addScaledVector(dir, this.data.speed * (dt/1000));
+          // rotate to face player
+          this.el.object3D.lookAt(playerPos.x, myPos.y, playerPos.z);
+        } else if (this.state === 'patrol') {
+          const dest = this.nextPatrolPoint;
+          if (dest && myPos.distanceTo(dest) < 0.4) {
+            this.setPatrolPoint();
+          }
+        }
+      },
+      takeDamage: function (amount) {
+        this.data.health -= amount;
+        if (this.data.health <= 0) {
+          this.die();
+        } else {
+          // flash
+          const old = this.el.getAttribute('material').color;
+          this.el.setAttribute('material','color:#ffaaaa');
+          setTimeout(()=> this.el.setAttribute('material',`color:${old}`),120);
+        }
+      },
+      die: function () {
+        this.state = 'dead';
+        // spawn explosion
+        const exp = document.createElement('a-entity');
+        exp.setAttribute('position', this.el.getAttribute('position'));
+        exp.setAttribute('particle-system', 'preset: dust; particleCount: 400; size: 0.8; color: #ff7a00, #ffec8b');
+        this.el.sceneEl.appendChild(exp);
+        // remove enemy visuals and collider
+        this.el.setAttribute('visible','false');
+        setTimeout(()=> {
+          this.el.parentNode.removeChild(this.el);
+          if (exp.parentNode) exp.parentNode.removeChild(exp);
+        }, 1200);
+        // increment score
+        const game = document.querySelector('a-scene').components['game-manager'];
+        if (game) game.addScore(10);
+      }
     });
 
-    // Enemy Attack
-    setInterval(() => {
-      let playerPos = document.getElementById("player").object3D.position;
-      document.querySelectorAll(".enemy").forEach(enemy => {
-        let dist = playerPos.distanceTo(enemy.object3D.position);
-        if (dist < 3) {
-          health -= 5;
-          updateHUD();
+    AFRAME.registerComponent('game-manager', {
+      init: function () {
+        this.score = 0;
+        this.ammo = 30;
+        this.health = 100;
+        this.maxAmmo = 30;
+        this.reloading = false;
+        // HUD nodes
+        this.scoreEl = document.querySelector('#scoreDisplay');
+        this.ammoEl = document.querySelector('#ammoDisplay');
+        this.healthEl = document.querySelector('#healthDisplay');
+        this.radarEl = document.querySelector('#radar');
+        this.updateHUD();
+        // raycaster for shooting
+        this.raycaster = new THREE.Raycaster();
+      },
+      updateHUD: function() {
+        this.scoreEl.setAttribute('value','SCORE: '+ this.score);
+        this.ammoEl.setAttribute('value','AMMO: '+ this.ammo + (this.reloading ? ' (RELOADING...)' : ''));
+        this.healthEl.setAttribute('value','HEALTH: '+ this.health);
+      },
+      addScore: function(n) { this.score += n; this.updateHUD(); },
+      takeDamage: function(n) {
+        this.health = Math.max(0, this.health - n);
+        this.updateHUD();
+        if (this.health === 0) {
+          alert('Player down. Demo over. Restart page to try again.');
+        }
+      },
+      shoot: function(origin, direction) {
+        if (this.reloading) return false;
+        if (this.ammo <= 0) { this.reload(); return false; }
+        this.ammo -= 1; this.updateHUD();
+        // check enemies
+        const scene = this.el;
+        const enemies = Array.from(document.querySelectorAll('.enemy'));
+        // perform a raycast
+        this.raycaster.set(origin, direction);
+        const intersects = [];
+        enemies.forEach(e => {
+          const mesh = e.getObject3D('mesh') || e.getObject3D('mesh') || e.object3D;
+          if (!mesh) return;
+          // simple bounding sphere test
+          const pos = e.object3D.position;
+          const dist = origin.distanceTo(pos);
+          const dirToEnemy = new THREE.Vector3().subVectors(pos, origin).normalize();
+          const angle = dir.angleTo(dirToEnemy);
+          if (angle < 0.15 && dist < 30) {
+            intersects.push({enemy:e, dist});
+          }
+        });
+        if (intersects.length) {
+          intersects.sort((a,b)=>a.dist-b.dist);
+          const hit = intersects[0].enemy;
+          // damage enemy
+          if (hit.components['enemy-ai']) {
+            hit.components['enemy-ai'].takeDamage(1);
+          } else {
+            // fallback: remove
+            hit.parentNode.removeChild(hit);
+            this.addScore(5);
+          }
+          // return hit true
+          return true;
+        }
+        return false;
+      },
+      reload: function() {
+        if (this.reloading) return;
+        this.reloading = true;
+        this.updateHUD();
+        const reloadSound = document.querySelector('#reloadSnd');
+        if (reloadSound) reloadSound.play();
+        setTimeout(()=> { this.ammo = this.maxAmmo; this.reloading = false; this.updateHUD(); }, 1800);
+      },
+      tick: function() {
+        // update radar mini-render: show count nearby enemies
+        const radar = this.radarEl;
+        const playerPos = document.querySelector('#player').object3D.position;
+        const enemies = Array.from(document.querySelectorAll('.enemy'));
+        // compute normalized positions for simple dots
+        const dots = enemies.map(e => {
+          const p = e.object3D.position;
+          const dx = p.x - playerPos.x;
+          const dz = p.z - playerPos.z;
+          return {x: dx/12, y: dz/12}; // normalized
+        });
+        // create small canvas image in texture? Simpler: update text: nearby enemies
+        const nearby = enemies.filter(e => e.object3D.position.distanceTo(playerPos) < 12).length;
+        radar.setAttribute('value', 'RADAR: '+ nearby + ' enemies nearby');
+      }
+    });
+
+    // input: click to shoot (mouse / tap); space to reload
+    document.addEventListener('DOMContentLoaded', ()=> {
+      const scene = document.querySelector('a-scene');
+      scene.setAttribute('game-manager','');
+      // shoot on click/tap
+      window.addEventListener('click', (evt)=> {
+        // create muzzle flash
+        const player = document.querySelector('#player');
+        const origin = new THREE.Vector3().copy(player.object3D.position);
+        origin.y += 0.2;
+        // direction based on camera forward
+        const camera = player.getObject3D('camera');
+        const dir = new THREE.Vector3(0,0,-1).applyQuaternion(player.object3D.quaternion).normalize();
+        // muzzle flash visuals
+        const flash = document.createElement('a-entity');
+        flash.setAttribute('geometry','primitive:sphere;radius:0.08');
+        flash.setAttribute('material','color:#ffcf33;opacity:0.95;emissive:#ffcf33');
+        const gunPos = player.getAttribute('position');
+        flash.setAttribute('position', `${gunPos.x} ${gunPos.y+0.9} ${gunPos.z - 0.6}`);
+        scene.appendChild(flash);
+        setTimeout(()=> flash.parentNode && flash.parentNode.removeChild(flash),120);
+
+        // play gun sound
+        const gunSnd = document.querySelector('#gunSnd');
+        if (gunSnd) { gunSnd.currentTime = 0; gunSnd.play(); }
+
+        const gm = scene.components['game-manager'];
+        if (gm) {
+          const hit = gm.shoot(origin, dir);
+          if (hit) {
+            const hitSnd = document.querySelector('#hitSnd'); if (hitSnd) hitSnd.play();
+          }
         }
       });
-    }, 1000);
 
+      // reload with 'r' key or space
+      window.addEventListener('keydown', (e)=> {
+        if (e.key === 'r' || e.code === 'Space') {
+          const gm = document.querySelector('a-scene').components['game-manager'];
+          if (gm) gm.reload();
+        }
+      });
+
+      // periodic enemy attacks to player when close
+      setInterval(()=> {
+        const player = document.querySelector('#player');
+        const gm = document.querySelector('a-scene').components['game-manager'];
+        if(!player || !gm) return;
+        const playerPos = player.object3D.position;
+        document.querySelectorAll('.enemy').forEach(enemy => {
+          const d = enemy.object3D.position.distanceTo(playerPos);
+          if (d < 2.2) {
+            // enemy hits player
+            gm.takeDamage(8);
+          }
+        });
+      }, 800);
+    });
   </script>
 
-</a-scene>
+  <style>
+    body { margin:0; font-family: sans-serif; }
+    /* Note: HUDs are in-scene A-Text so no extra CSS needed */
+  </style>
+</head>
+<body>
+  <a-scene background="color: #0b0f1a" vr-mode-ui="enterVRButton: true" embedded>
+
+    <!-- Assets (sounds & models) -->
+    <a-assets>
+      <audio id="gunSnd" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_5c74619e47.mp3"></audio>
+      <audio id="hitSnd" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_040b71e3e0.mp3"></audio>
+      <audio id="reloadSnd" src="https://cdn.pixabay.com/download/audio/2021/09/09/audio_6b4cb6c7a8.mp3"></audio>
+      <!-- If you have your own GLTF weapon or enemies, preload them here -->
+    </a-assets>
+
+    <!-- Lighting & environment -->
+    <a-entity light="type: ambient; intensity: 0.6"></a-entity>
+    <a-entity light="type: directional; intensity: 1.2" position="2 8 4"></a-entity>
+
+    <!-- Ground with subtle texture-like color -->
+    <a-plane rotation="-90 0 0" width="120" height="120" color="#394b3f" position="0 0 0"></a-plane>
+
+    <!-- Rocks / cover (simple geometry) -->
+    <a-box position="-6 0.8 -10" depth="4" width="6" height="1.6" color="#5b4a3a"></a-box>
+    <a-box position="6 0.8 -20" depth="4" width="6" height="1.6" color="#5b4a3a"></a-box>
+    <a-box position="0 0.8 -30" depth="8" width="3" height="1.6" color="#5b4a3a"></a-box>
+
+    <!-- Player camera rig -->
+    <a-entity id="player" position="0 1.6 6">
+      <a-entity camera wasd-controls look-controls></a-entity>
+    </a-entity>
+
+    <!-- HUD: score, ammo, health -->
+    <a-entity id="hud" position="0 0 -1.2">
+      <a-text id="scoreDisplay" value="SCORE: 0" position="-0.95 0.45 -0.1" color="#fff" width="3" scale="0.7 0.7 0.7"></a-text>
+      <a-text id="ammoDisplay" value="AMMO: 30" position="-0.15 0.45 -0.1" color="#ffd966" width="3" scale="0.7 0.7 0.7"></a-text>
+      <a-text id="healthDisplay" value="HEALTH: 100" position="0.75 0.45 -0.1" color="#ff6666" width="3" scale="0.7 0.7 0.7"></a-text>
+      <!-- radar text (simple) -->
+      <a-text id="radar" value="RADAR: 0 enemies nearby" position="-0.95 0.2 -0.1" color="#7af" width="3" scale="0.5 0.5 0.5"></a-text>
+      <!-- instructions -->
+      <a-text value="Click/Tap: Shoot • R / Space: Reload" position="-0.95 0.02 -0.1" color="#aaa" width="4" scale="0.45 0.45 0.45"></a-text>
+    </a-entity>
+
+    <!-- Visual weapon (simple stylized) attached to camera -->
+    <a-entity id="gun" position="0.2 -0.35 -0.9">
+      <a-box position="0 0 0" depth="0.9" height="0.12" width="0.22" color="#111111"></a-box>
+      <a-box position="-0.02 -0.06 -0.25" depth="0.15" height="0.04" width="0.06" color="#222"></a-box>
+    </a-entity>
+
+    <!-- Enemies: different positions, all with class 'enemy' -->
+    <a-entity class="enemy" position="-4 0.9 -14" geometry="primitive: box; depth:0.9; height:1.8; width:0.8" material="color:#cc3333" enemy-ai="patrolRadius:4; speed:0.9; health:2"></a-entity>
+    <a-entity class="enemy" position="6 0.9 -18" geometry="primitive: capsule; radius:0.4; height:1.8" material="color:#c94d4d" enemy-ai="patrolRadius:5; speed:0.7; health:3"></a-entity>
+    <a-entity class="enemy" position="-10 0.9 -22" geometry="primitive: box; depth:0.9; height:1.8; width:0.8" material="color:#b02a2a" enemy-ai="patrolRadius:5; speed:1.2; health:2"></a-entity>
+    <a-entity class="enemy" position="10 0.9 -28" geometry="primitive: box; depth:0.9; height:1.8; width:0.8" material="color:#d24a4a" enemy-ai="patrolRadius:4; speed:0.6; health:4"></a-entity>
+    <a-entity class="enemy" position="2 0.9 -34" geometry="primitive: box; depth:0.9; height:1.8; width:0.8" material="color:#b73333" enemy-ai="patrolRadius:6; speed:0.8; health:3"></a-entity>
+
+    <!-- invisible floor collider for raycasting & reference -->
+    <a-entity id="ground" geometry="primitive: plane; width:120; height:120" rotation="-90 0 0" position="0 0 0" visible="false"></a-entity>
+
+    <!-- sounds (play via JS) -->
+    <audio id="gunSnd" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_5c74619e47.mp3"></audio>
+    <audio id="hitSnd" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_040b71e3e0.mp3"></audio>
+    <audio id="reloadSnd" src="https://cdn.pixabay.com/download/audio/2021/09/09/audio_6b4cb6c7a8.mp3"></audio>
+
+  </a-scene>
 </body>
 </html>
